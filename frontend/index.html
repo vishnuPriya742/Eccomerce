@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>E-commerce Recommender</title>
+  <style>
+    /* Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1f1c2c, #928dab);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px;
+      color: #fff;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+      text-shadow: 0px 0px 15px rgba(255,255,255,0.3);
+      text-align: center;
+    }
+
+    /* Input Section */
+    .search-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 30px;
+      justify-content: center;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    input {
+      flex: 1;
+      min-width: 200px;
+      padding: 12px 15px;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+    }
+
+    button {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      background: #00c6ff;
+      color: #fff;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background: #0072ff;
+      transform: scale(1.05);
+    }
+
+    /* Results Column */
+    #results {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      width: 100%;
+      max-width: 600px; /* keeps it centered */
+    }
+
+    .card {
+      background: rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0px 8px 20px rgba(0,0,0,0.3);
+      backdrop-filter: blur(10px);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0px 12px 25px rgba(0,0,0,0.5);
+    }
+
+    .card h3 {
+      color: #00c6ff;
+      margin-bottom: 10px;
+    }
+
+    .card p {
+      margin: 4px 0;
+    }
+
+    /* ML Background Animation */
+    body::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: url('https://i.ibb.co/6vmzKbp/ml-bg.png') repeat;
+      opacity: 0.05;
+      z-index: -1;
+      animation: moveBg 60s linear infinite;
+    }
+
+    @keyframes moveBg {
+      from { background-position: 0 0; }
+      to { background-position: 1000px 1000px; }
+    }
+
+    /* Responsive tweaks */
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 2rem;
+      }
+
+      .card {
+        padding: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>🛒 AI-Powered Product Recommender</h1>
+
+  <div class="search-container">
+    <input type="text" id="query" placeholder="🔍 Type product name...">
+    <button onclick="searchProducts()">Search</button>
+  </div>
+
+  <div id="results"></div>
+
+  <script>
+    async function searchProducts() {
+      const query = document.getElementById("query").value;
+      const resultsDiv = document.getElementById("results");
+
+      if (!query) {
+        alert("Enter a product name");
+        return;
+      }
+
+      resultsDiv.innerHTML = "<p>Loading...</p>";
+
+      try {
+        const res = await fetch("http://127.0.0.1:5000/recommend", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query: query }),
+          mode: "cors"
+        });
+
+        const data = await res.json();
+        resultsDiv.innerHTML = "";
+
+        if (data.error) {
+          resultsDiv.innerHTML = `<p>Error: ${data.error}</p>`;
+          return;
+        }
+
+        data.recommendations.forEach(p => {
+          resultsDiv.innerHTML += `
+            <div class="card">
+              <h3>${p.name}</h3>
+              <p><b>Category:</b> ${p.category}</p>
+              <p><b>Price:</b> ₹${p.price}</p>
+              <p><b>Rating:</b> ⭐ ${p.rating}</p>
+              <p><b>Stock:</b> ${p.stock}</p>
+            </div>
+          `;
+        });
+      } catch (err) {
+        console.error(err);
+        resultsDiv.innerHTML = "<p>Error fetching recommendations.</p>";
+      }
+    }
+  </script>
+</body>
+</html>
